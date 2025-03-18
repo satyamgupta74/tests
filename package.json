@@ -2,7 +2,7 @@
   "name": "vercel-node-server",
   "version": "1.0.0",
   "description": "A simple Node.js API running on Vercel",
-  "main": "api/index.js",
+  "main": "index.js",
   "scripts": {
     "dev": "vercel dev",
     "deploy": "vercel --prod"
