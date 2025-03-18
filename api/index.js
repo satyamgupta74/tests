@@ -106,5 +106,5 @@ app.get("/UsersDetails", (req, res) => {
   });
 });
 
-// ✅ Export Serverless Function
 module.exports = app;
+
