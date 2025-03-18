@@ -29,7 +29,12 @@ pool.getConnection((err, connection) => {
   }
 });
 
-// ✅ Route: User Registration
+// ✅ Rou
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
+
+te: User Registration
 app.post("/createHFTA", (req, res) => {
   const {
     FirstName, MiddleName, LastName, CurrentBelt, EmailID, Contact,
