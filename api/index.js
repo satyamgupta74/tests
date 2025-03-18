@@ -23,21 +23,25 @@ const pool = mysql.createPool({
 
  
 // ✅ Test Database Connection
-pool.getConnection((err, connection) => {
-  if (err) {
-    console.error("Database connection error:", err.message);
-  } else {
+async function testDBConnection() {
+  try {
+    const connection = await pool.getConnection();
     console.log("✅ Connected to MySQL database");
     connection.release();
+  } catch (error) {
+    console.error("Database connection error:", error.message);
   }
-});
+}
+testDBConnection();
 
-// ✅ Rou
+
+// ✅ Route: Root for Testing
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-te: User Registration
+// ✅ Route: User Registration
+
 app.post("/createHFTA", (req, res) => {
   const {
     FirstName, MiddleName, LastName, CurrentBelt, EmailID, Contact,
