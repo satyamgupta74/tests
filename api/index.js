@@ -11,26 +11,26 @@ app.use(cors());
 // ✅ MySQL Connection (use connection pooling for scalability)
 
 
-const pool = mysql.createPool({
-  host: "3.7.158.221",
-  user: "admin_buildINT",
-  password: "buildINT@2023$",
-  database: "HFTA",
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+// const pool = mysql.createPool({
+//   host: "3.7.158.221",
+//   user: "admin_buildINT",
+//   password: "buildINT@2023$",
+//   database: "HFTA",
+//   waitForConnections: true,
+//   connectionLimit: 10,
+//   queueLimit: 0,
+// });
 
  
 // ✅ Test Database Connection
-pool.getConnection((err, connection) => {
-  if (err) {
-    console.error("Database connection error:", err.message);
-  } else {
-    console.log("✅ Connected to MySQL database");
-    connection.release();
-  }
-});
+// pool.getConnection((err, connection) => {
+//   if (err) {
+//     console.error("Database connection error:", err.message);
+//   } else {
+//     console.log("✅ Connected to MySQL database");
+//     connection.release();
+//   }
+// });
 
 // ✅ Rou
 app.get("/", (req, res) => {
