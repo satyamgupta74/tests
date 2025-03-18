@@ -9,7 +9,7 @@ app.use(express.json());
 app.use(cors());
 
 // ✅ MySQL Connection (use connection pooling for scalability)
-const mysql = require("mysql2/promise");
+
 
 const pool = mysql.createPool({
   host: "3.7.158.221",
