@@ -126,5 +126,37 @@ app.get("/UsersDetails", async (req, res) => {
 });
 
 
+app.get("/attendance-stats", async (req, res) => {
+  try {
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD format
+
+    const totalUsersQuery = "SELECT COUNT(DISTINCT Username) AS totalStudents FROM user";
+    const presentQuery = `SELECT COUNT(DISTINCT Username) AS totalPresent FROM Attendance 
+                          WHERE AttandanceStatus = 1 AND DATE(Time) = ?`;
+
+    // ✅ Execute queries using await
+    const [userResult] = await pool.query(totalUsersQuery);
+    const totalStudents = userResult[0].totalStudents;
+
+    const [presentResult] = await pool.query(presentQuery, [today]);
+    const totalPresent = presentResult[0].totalPresent;
+
+    const percentagePresent = totalStudents > 0 ? (totalPresent / totalStudents) * 100 : 0;
+    const percentageNotPresent = 100 - percentagePresent;
+
+    res.json({
+      totalStudents,
+      totalPresent,
+      percentagePresent: `${percentagePresent.toFixed(2)}%`,
+      percentageNotPresent: `${percentageNotPresent.toFixed(2)}%`
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: "Database error", error: err.message });
+  }
+});
+
+
+
 module.exports = app;
 
