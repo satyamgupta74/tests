@@ -42,36 +42,66 @@ app.get("/", (req, res) => {
 
 // ✅ Route: User Registration
 
-app.post("/createHFTA", (req, res) => {
-  const {
-    FirstName, MiddleName, LastName, CurrentBelt, EmailID, Contact,
-    AlternativeContact, GuardianName, Address, Gender, DateOfJoining,
-    Password, Role, Username
-  } = req.body;
+app.post('/createHFTA', async (req, res) => {
+    try {
+        const {
+            FirstName,
+            MiddleName,
+            LastName,
+            CurrentBelt,
+            EmailID,
+            Contact,
+            AlternativeContact,
+            GuardianName,
+            Address,
+            Gender,
+            DateOfJoining,
+            Password,
+            Role,
+            Username
+        } = req.body;
 
-  if (!FirstName || !LastName || !EmailID || !Contact || !Password || !DateOfJoining || !Username) {
-    return res.status(400).json({ message: "Required fields are missing" });
-  }
+        // Check for required fields
+        if (!FirstName || !LastName || !EmailID || !Contact || !Password || !DateOfJoining || 
+            !MiddleName || !CurrentBelt || !AlternativeContact || !GuardianName || !Address || 
+            !Gender || !Role || !Username) {
+            return res.status(400).json({ message: 'Required fields are missing' });
+        }
 
-  bcrypt.hash(Password, 10, (err, hashedPassword) => {
-    if (err) return res.status(500).json({ message: "Error encrypting password" });
+        // Check if the user already exists (by Username or EmailID)
+        const checkQuery = `SELECT * FROM user WHERE Username = ? OR EmailID = ?`;
+        const [existingUser] = await pool.query(checkQuery, [Username, EmailID]);
 
-    const query = `
-      INSERT INTO user (FirstName, MiddleName, LastName, CurrentBelt, EmailID, Contact,
-                        AlternativeContact, GuardianName, Address, Gender, DateOfJoining,
-                        Password, Role, Username)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        if (existingUser.length > 0) {
+            return res.status(409).json({ message: 'User already registered' });
+        }
 
-    const values = [FirstName, MiddleName, LastName, CurrentBelt, EmailID, Contact,
-                    AlternativeContact, GuardianName, Address, Gender, DateOfJoining,
-                    hashedPassword, Role, Username];
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(Password, 10);
 
-    pool.query(query, values, (err, result) => {
-      if (err) return res.status(500).json({ message: "Database error", error: err.sqlMessage });
-      res.status(201).json({ message: "User created successfully", userId: result.insertId });
-    });
-  });
+        // SQL query to insert user
+        const insertQuery = `
+            INSERT INTO user (
+                FirstName, MiddleName, LastName, CurrentBelt, EmailID, Contact, AlternativeContact,
+                GuardianName, Address, Gender, DateOfJoining, Password, Role, Username
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        const values = [
+            FirstName, MiddleName, LastName, CurrentBelt, EmailID, Contact, AlternativeContact,
+            GuardianName, Address, Gender, DateOfJoining, hashedPassword, Role, Username
+        ];
+
+        // Execute the query
+        const [result] = await pool.query(insertQuery, values);
+
+        res.status(201).json({ message: 'User created successfully', userId: result.insertId });
+
+    } catch (err) {
+        console.error("Database Error:", err.message);
+        res.status(500).json({ message: 'Database error', error: err.message });
+    }
 });
+
 
 // ✅ Route: User Login
 app.post('/login', async (req, res) => {
