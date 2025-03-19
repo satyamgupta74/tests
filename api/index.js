@@ -105,13 +105,18 @@ app.get("/Attendances", (req, res) => {
 });
 
 // ✅ Route: Fetch User Details
-app.get("/UsersDetails", (req, res) => {
-  const query = "SELECT ID, Role, Username, Contact, CurrentBelt FROM HFTA.user WHERE Role IN ('Student', 'Instructor') ORDER BY 1 DESC";
-  pool.query(query, (err, result) => {
-    if (err) return res.status(500).json({ message: "Database error" });
+app.get("/UsersDetails", async (req, res) => {
+  try {
+    const query = "SELECT ID, Role, Username, Contact, CurrentBelt FROM HFTA.user WHERE Role IN ('Student', 'Instructor') ORDER BY 1 DESC";
+    
+    const [result] = await pool.query(query); // Use await for async query execution
+
     res.status(200).json({ message: "User records retrieved", data: result });
-  });
+  } catch (err) {
+    res.status(500).json({ message: "Database error", error: err.message });
+  }
 });
+
 
 module.exports = app;
 
