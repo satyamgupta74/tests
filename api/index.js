@@ -74,25 +74,59 @@ app.post("/createHFTA", (req, res) => {
 });
 
 // ✅ Route: User Login
-app.post("/login", (req, res) => {
-  const { Username, Password } = req.body;
-  if (!Username || !Password) return res.status(400).json({ message: "Username and Password required" });
+app.post('/login', async (req, res) => {
+    try {
+        const { Username, Password } = req.body;
 
-  const query = "SELECT * FROM user WHERE Username = ?";
-  pool.query(query, [Username], (err, result) => {
-    if (err) return res.status(500).json({ message: "Database error" });
-    if (result.length === 0) return res.status(404).json({ message: "User not found" });
+        if (!Username || !Password) {
+            return res.status(400).json({ message: 'Username and Password are required' });
+        }
 
-    const user = result[0];
-    bcrypt.compare(Password, user.Password, (err, isMatch) => {
-      if (err || !isMatch) return res.status(401).json({ message: "Invalid credentials" });
+        // Fetch user details
+        const query = 'SELECT * FROM user WHERE Username = ?';
+        const [result] = await pool.query(query, [Username]);
 
-      const token = jwt.sign({ userId: user.userId, Username: user.Username }, "your_jwt_secret_key", { expiresIn: "96h" });
+        if (result.length === 0) {
+            return res.status(404).json({ message: 'User not found' });
+        }
 
-      res.status(200).json({ message: "Login successful", token, Role: user.Role, Username: user.Username });
-    });
-  });
+        const user = result[0];
+
+        // Compare hashed password
+        const isMatch = await bcrypt.compare(Password, user.Password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: user.userId, Username: user.Username, Role: user.Role },
+            process.env.JWT_SECRET || 'your_jwt_secret_key',  // Use env variable for security
+            { expiresIn: '96h' }
+        );
+
+        // Calculate expiration time (96 hours from now)
+        const expirationTime = new Date(Date.now() + 96 * 60 * 60 * 1000);
+
+        // Store token in the database
+        const updateQuery = 'UPDATE user SET Token = ?, expire_token = ? WHERE Username = ?';
+        await pool.query(updateQuery, [token, expirationTime, Username]);
+
+        res.status(200).json({
+            message: 'Login successful',
+            Token: token,
+            expire_token: expirationTime,
+            Role: user.Role,
+            Username: user.Username
+        });
+
+    } catch (err) {
+        console.error("Database Error:", err.message);
+        res.status(500).json({ message: 'Database error', error: err.message });
+    }
 });
+
+
 
 // ✅ Route: Fetch Attendance Records
 app.get("/Attendances", async (req, res) => {
