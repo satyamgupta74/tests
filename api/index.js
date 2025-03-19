@@ -156,7 +156,28 @@ app.get("/attendance-stats", async (req, res) => {
   }
 });
 
+app.get('/getHFTA/:username',async (req, res) => {
+  const { username } = req.params;
 
+  if (!username) {
+      return res.status(400).json({ message: 'Username is required' });
+  }
+  try{
+  const query = `
+      SELECT FirstName, MiddleName, LastName, CurrentBelt, EmailID, Contact, 
+             AlternativeContact, GuardianName, Address, Gender, DateOfJoining, Role, Username
+      FROM user
+      WHERE Username = ?`;
+  const [result] = await pool.query(query, [username]);
+
+  if (result.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+  }
+  res.status(200).json(result[0]);
+} catch (err) {
+  res.status(500).json({ message: 'Database error', error: err.message });
+}
+});
 
 module.exports = app;
 
