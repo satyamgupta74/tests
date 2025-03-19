@@ -95,13 +95,21 @@ app.post("/login", (req, res) => {
 });
 
 // ✅ Route: Fetch Attendance Records
-app.get("/Attendances", (req, res) => {
-  const query = "SELECT * FROM Attendance ORDER BY Id DESC";
-  pool.query(query, (err, result) => {
-    if (err) return res.status(500).json({ message: "Database error" });
-    if (result.length === 0) return res.status(404).json({ message: "No attendance records found" });
+app.get("/Attendances", async (req, res) => {
+  try {
+    const query = "SELECT * FROM Attendance ORDER BY Id DESC";
+
+    // ✅ Use async/await properly
+    const [result] = await pool.query(query);
+
+    if (result.length === 0) {
+      return res.status(404).json({ message: "No attendance records found" });
+    }
+
     res.status(200).json({ message: "Attendance records retrieved", data: result });
-  });
+  } catch (err) {
+    res.status(500).json({ message: "Database error", error: err.message });
+  }
 });
 
 // ✅ Route: Fetch User Details
