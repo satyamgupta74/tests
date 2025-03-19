@@ -179,5 +179,29 @@ app.get('/getHFTA/:username',async (req, res) => {
 }
 });
 
+app.post('/Attendance', async (req, res) => {
+  try{
+  const { Username, Days, Time, Loaction, Decrptions,AttandanceStatus } = req.body;
+
+  if (!Username || !Days || !Time || !Loaction || !Decrptions) {
+      return res.status(400).json({ message: 'Required fields are missing' });
+  }
+
+  // Check if the user already has an entry for the given day
+  const checkQuery = 'SELECT * FROM Attendance WHERE Username = ? AND Days = ?';
+  const [result] = await pool.query(checkQuery, [Username, Days]);
+  if (result.length > 0) {
+      return res.status(409).json({ message: 'Attendance already marked for this day' });
+  }
+  
+      // If no entry exists, insert the new attendance record
+      const insertQuery = 'INSERT INTO Attendance (Username, Days, Time, Loaction, Decrptions,AttandanceStatus) VALUES (?,?, ?, ?, ?, ?)';
+      await pool.query(insertQuery, [Username, Days, Time, Loaction, Decrptions,AttandanceStatus || 1 ]);
+      res.status(201).json({ message: 'Attendance marked successfully' });
+  } catch (err) { 
+      res.status(500).json({ message: 'Database error', error: err.message });
+  }
+});
+
 module.exports = app;
 
